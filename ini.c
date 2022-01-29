@@ -15,11 +15,14 @@ https://github.com/benhoyt/inih
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include <stdio.h>
+
 #include <ctype.h>
 #include <string.h>
-
 #include "ini.h"
+
+#if INI_HANDLER_FILE
+#include <stdio.h>
+#endif
 
 #if !INI_USE_STACK
 #if INI_CUSTOM_ALLOCATOR
@@ -240,11 +243,15 @@ int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
     return error;
 }
 
+
+#if INI_HANDLER_FILE
 /* See documentation in header file. */
 int ini_parse_file(FILE* file, ini_handler handler, void* user)
 {
     return ini_parse_stream((ini_reader)fgets, file, handler, user);
 }
+
+
 
 /* See documentation in header file. */
 int ini_parse(const char* filename, ini_handler handler, void* user)
@@ -259,7 +266,7 @@ int ini_parse(const char* filename, ini_handler handler, void* user)
     fclose(file);
     return error;
 }
-
+#endif
 /* An ini_reader function to read the next line from a string buffer. This
    is the fgets() equivalent used by ini_parse_string(). */
 static char* ini_reader_string(char* str, int num, void* stream) {

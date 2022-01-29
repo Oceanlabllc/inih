@@ -19,7 +19,15 @@ https://github.com/benhoyt/inih
 extern "C" {
 #endif
 
+    
+/* Nonzero if ini_handler should include native file system support */    
+#ifndef INI_HANDLER_FILE
+#define INI_HANDLER_FILE 1
+#endif    
+    
+#if INI_HANDLER_FILE
 #include <stdio.h>
+#endif
 
 /* Nonzero if ini_handler callback should accept lineno parameter. */
 #ifndef INI_HANDLER_LINENO
@@ -39,6 +47,8 @@ typedef int (*ini_handler)(void* user, const char* section,
 /* Typedef for prototype of fgets-style reader function. */
 typedef char* (*ini_reader)(char* str, int num, void* stream);
 
+#if INI_HANDLER_FILE
+
 /* Parse given INI-style file. May have [section]s, name=value pairs
    (whitespace stripped), and comments starting with ';' (semicolon). Section
    is "" if name=value pair parsed before any section heading. name:value
@@ -56,8 +66,10 @@ int ini_parse(const char* filename, ini_handler handler, void* user);
 
 /* Same as ini_parse(), but takes a FILE* instead of filename. This doesn't
    close the file when it's finished -- the caller must do that. */
-int ini_parse_file(FILE* file, ini_handler handler, void* user);
 
+
+int ini_parse_file(FILE* file, ini_handler handler, void* user);
+#endif
 /* Same as ini_parse(), but takes an ini_reader function pointer instead of
    filename. Used for implementing custom or string-based I/O (see also
    ini_parse_string). */
