@@ -233,15 +233,13 @@ int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
             break;
 #endif
         //exit on first I/O error
-        if(*pError_out){
-            error = *pError_out;
-            break;
-        }
+        if(*pError_out) break;
     }
 
 #if !INI_USE_STACK
     ini_free(line);
 #endif    
+    if(*pError_out) error = *pError_out;
     return error;
 }
 
