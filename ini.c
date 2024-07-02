@@ -15,7 +15,6 @@ https://github.com/benhoyt/inih
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-
 #include <ctype.h>
 #include <string.h>
 #include "ini.h"
@@ -98,7 +97,7 @@ static char* strncpy0(char* dest, const char* src, size_t size)
 
 /* See documentation in header file. */
 int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
-                     void* user)
+                     void* user, int* pError_out)
 {
     /* Uses a fair bit of stack (use heap instead if you need to) */
 #if INI_USE_STACK
@@ -121,7 +120,6 @@ int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
     char* value;
     int lineno = 0;
     int error = 0;
-
 #if !INI_USE_STACK
     line = (char*)ini_malloc(INI_INITIAL_ALLOC);
     if (!line) {
@@ -136,7 +134,7 @@ int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
 #endif
 
     /* Scan through stream line by line */
-    while (reader(line, (int)max_line, stream) != NULL) {
+    while (reader(line, (int)max_line, stream, pError_out) != NULL) {
 #if INI_ALLOW_REALLOC && !INI_USE_STACK
         offset = strlen(line);
         while (offset == max_line - 1 && line[offset - 1] != '\n') {
@@ -234,12 +232,16 @@ int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
         if (error)
             break;
 #endif
+        //exit on first I/O error
+        if(*pError_out){
+            error = *pError_out;
+            break;
+        }
     }
 
 #if !INI_USE_STACK
     ini_free(line);
-#endif
-
+#endif    
     return error;
 }
 
@@ -297,9 +299,9 @@ static char* ini_reader_string(char* str, int num, void* stream) {
 /* See documentation in header file. */
 int ini_parse_string(const char* string, ini_handler handler, void* user) {
     ini_parse_string_ctx ctx;
-
+    int error = 0;
     ctx.ptr = string;
     ctx.num_left = strlen(string);
     return ini_parse_stream((ini_reader)ini_reader_string, &ctx, handler,
-                            user);
+                            user, &error);
 }

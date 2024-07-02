@@ -45,7 +45,7 @@ typedef int (*ini_handler)(void* user, const char* section,
 #endif
 
 /* Typedef for prototype of fgets-style reader function. */
-typedef char* (*ini_reader)(char* str, int num, void* stream);
+typedef char* (*ini_reader)(char* str, int num, void* stream, int* pError_out);
 
 #if INI_HANDLER_FILE
 
@@ -74,7 +74,7 @@ int ini_parse_file(FILE* file, ini_handler handler, void* user);
    filename. Used for implementing custom or string-based I/O (see also
    ini_parse_string). */
 int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
-                     void* user);
+                     void* user, int* pError_out);
 
 /* Same as ini_parse(), but takes a zero-terminated string with the INI data
 instead of a file. Useful for parsing INI data from a network socket or
