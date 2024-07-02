@@ -97,7 +97,7 @@ static char* strncpy0(char* dest, const char* src, size_t size)
 
 /* See documentation in header file. */
 int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
-                     void* user, int* pError_out)
+                     void* user)
 {
     /* Uses a fair bit of stack (use heap instead if you need to) */
 #if INI_USE_STACK
@@ -120,6 +120,7 @@ int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
     char* value;
     int lineno = 0;
     int error = 0;
+    int error_out = 0;
 #if !INI_USE_STACK
     line = (char*)ini_malloc(INI_INITIAL_ALLOC);
     if (!line) {
@@ -134,7 +135,7 @@ int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
 #endif
 
     /* Scan through stream line by line */
-    while (reader(line, (int)max_line, stream, pError_out) != NULL) {
+    while (reader(line, (int)max_line, stream, &error_out) != NULL) {
 #if INI_ALLOW_REALLOC && !INI_USE_STACK
         offset = strlen(line);
         while (offset == max_line - 1 && line[offset - 1] != '\n') {
@@ -233,13 +234,13 @@ int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
             break;
 #endif
         //exit on first I/O error
-        if(*pError_out) break;
+        if(error_out) break;
     }
 
 #if !INI_USE_STACK
     ini_free(line);
 #endif    
-    if(*pError_out) error = *pError_out;
+    if(error_out) error = error_out;
     return error;
 }
 
@@ -297,9 +298,8 @@ static char* ini_reader_string(char* str, int num, void* stream) {
 /* See documentation in header file. */
 int ini_parse_string(const char* string, ini_handler handler, void* user) {
     ini_parse_string_ctx ctx;
-    int error = 0;
     ctx.ptr = string;
     ctx.num_left = strlen(string);
     return ini_parse_stream((ini_reader)ini_reader_string, &ctx, handler,
-                            user, &error);
+                            user);
 }
